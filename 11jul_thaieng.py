@@ -72,3 +72,31 @@ with open(output_text_file, 'w', encoding='utf-8') as f:
     f.write(text)
 
 print(f'Text extracted and saved to {output_text_file}')
+
+
+#รวม 2,3
+import pytesseract
+from PIL import Image
+import cv2
+
+# Path to the image file
+image_path = '/Users/gunnviryasiri/Desktop/ocr/testfile/file1.jpg'
+
+# Path to the output text file
+output_text_file = '/Users/gunnviryasiri/Desktop/ocr/11jul_6.txt'
+
+# Load the image
+image = Image.open(image_path)
+
+# Convert the image to grayscale
+gray = image.convert('L')
+
+# Perform OCR on the image using Thai and English languages
+custom_config = r'--oem 3 --psm 6'  # ตัวเลือกแก้ไขพารามิเตอร์ตามที่ต้องการ รวม จากวิธี2
+text = pytesseract.image_to_string(gray, lang='tha+eng')
+
+# Save the extracted text to a file
+with open(output_text_file, 'w', encoding='utf-8') as f:
+    f.write(text)
+
+print(f'Text extracted and saved to {output_text_file}')
