@@ -48,30 +48,30 @@
 
 
 ##3 grayscale
-import pytesseract
-from PIL import Image
-import cv2
+# import pytesseract
+# from PIL import Image
+# import cv2
 
-# Path to the image file
-image_path = '/Users/gunnviryasiri/Desktop/ocr/testfile/file1.jpg'
+# # Path to the image file
+# image_path = '/Users/gunnviryasiri/Desktop/ocr/testfile/file1.jpg'
 
-# Path to the output text file
-output_text_file = '/Users/gunnviryasiri/Desktop/ocr/11jul_5.txt'
+# # Path to the output text file
+# output_text_file = '/Users/gunnviryasiri/Desktop/ocr/11jul_5.txt'
 
-# Load the image
-image = Image.open(image_path)
+# # Load the image
+# image = Image.open(image_path)
 
-# Convert the image to grayscale
-gray = image.convert('L')
+# # Convert the image to grayscale
+# gray = image.convert('L')
 
-# Perform OCR on the image using Thai and English languages
-text = pytesseract.image_to_string(gray, lang='tha+eng')
+# # Perform OCR on the image using Thai and English languages
+# text = pytesseract.image_to_string(gray, lang='tha+eng')
 
-# Save the extracted text to a file
-with open(output_text_file, 'w', encoding='utf-8') as f:
-    f.write(text)
+# # Save the extracted text to a file
+# with open(output_text_file, 'w', encoding='utf-8') as f:
+#     f.write(text)
 
-print(f'Text extracted and saved to {output_text_file}')
+# print(f'Text extracted and saved to {output_text_file}')
 
 
 #รวม 2,3
@@ -83,7 +83,7 @@ import cv2
 image_path = '/Users/gunnviryasiri/Desktop/ocr/testfile/file1.jpg'
 
 # Path to the output text file
-output_text_file = '/Users/gunnviryasiri/Desktop/ocr/11jul_6.txt'
+output_text_file = '/Users/gunnviryasiri/Desktop/ocr/11jul_6666666.txt'
 
 # Load the image
 image = Image.open(image_path)
