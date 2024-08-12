@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Result</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .image, .text {
+            width: 48%;
+        }
+    </style>
+</head>
+<body>
+    <h1>OCR Result</h1>
+    <div class="container">
+        <div class="image">
+            <h2>Original Image</h2>
+            <img src="{{ image_path }}" alt="Original Image" style="width:100%;">
+        </div>
+        <div class="text">
+            <h2>OCR Text</h2>
+            <pre>{{ text }}</pre>
+        </div>
+    </div>
+</body>
+</html>
