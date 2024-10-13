@@ -31,9 +31,14 @@ def evaluate_alignment(matches, ref, ocr):
                 got_char = ocr_chars[j1 + (i - i1)] if j1 + (i - i1) < len(ocr_chars) else 'None'
                 errors.append((i, expected_char, got_char))
 
+    return correct_chars, incorrect_chars, errors, correct_details
 
-    return correct_chars, incorrect_chars, errors, correct_details #,  edit_distance
-
+# ฟังก์ชันสำหรับการคำนวณค่าสีจากค่าของเปอร์เซ็นต์
+def get_color_from_value(value):
+    # สีแดงเมื่อค่าใกล้ 0, สีเขียวเมื่อค่าใกล้ 100
+    green = int(255 * (value / 100))
+    red = int(255 * (1 - (value / 100)))
+    return f'rgb({red}, {green}, 0)'
 
 # ฟังก์ชันสำหรับประมวลผล OCR
 def ocr_process(image, reference_text_file=None):
@@ -54,7 +59,7 @@ def ocr_process(image, reference_text_file=None):
             reference_text = reference_text_file.name  # ใช้ .name แทน .read()
             with open(reference_text, 'r', encoding='utf-8') as f:
                 reference_text = f.read().replace("\n", "")
-                
+
             processed_ocr_text_cleaned = processed_ocr_text.replace(" ", "").replace("\n", "")
             reference_text_cleaned = reference_text.replace(" ", "").replace("\n", "")
 
@@ -65,39 +70,32 @@ def ocr_process(image, reference_text_file=None):
             total_chars = len(reference_text_cleaned)
             precision = (correct_chars / (correct_chars + incorrect_chars)) * 100 if (correct_chars + incorrect_chars) > 0 else 0
             recall = (correct_chars / total_chars) * 100 if total_chars > 0 else 0
-            accuracy = correct_chars / total_chars if total_chars > 0 else 0
+            accuracy = correct_chars / total_chars * 100 if total_chars > 0 else 0
 
-            #             # สร้างข้อความที่มีเปอร์เซ็นต์
-            # accuracy_str = f"{round(accuracy, 2)}%"
-            # precision_str = f"{round(precision, 2)}%"
-            # recall_str = f"{round(recall, 2)}%"
+            # สร้างแถบสี HTML สำหรับ Accuracy, Precision, Recall โดยใช้สีจากค่าและเพิ่ม radius
+            accuracy_bar = f"""
+                <label>Accuracy:</label>
+                <div style='width: 100%; background-color: lightgray; border-radius: 15px;'>
+                    <div style='width: {accuracy}%; background-color: {get_color_from_value(accuracy)}; color: white; border-radius: 15px; padding: 5px;'>{accuracy:.2f}%</div>
+                </div>"""
+            precision_bar = f"""
+                <label>Precision:</label>
+                <div style='width: 100%; background-color: lightgray; border-radius: 15px;'>
+                    <div style='width: {precision}%; background-color: {get_color_from_value(precision)}; color: white; border-radius: 15px; padding: 5px;'>{precision:.2f}%</div>
+                </div>"""
+            recall_bar = f"""
+                <label>Recall:</label>
+                <div style='width: 100%; background-color: lightgray; border-radius: 15px;'>
+                    <div style='width: {recall}%; background-color: {get_color_from_value(recall)}; color: white; border-radius: 15px; padding: 5px;'>{recall:.2f}%</div>
+                </div>"""
 
-            return processed_ocr_text, accuracy * 100, precision, recall
+            return processed_ocr_text, accuracy_bar, precision_bar, recall_bar
 
         except FileNotFoundError:
             return processed_ocr_text, None, None, None
     else:
         # หากไม่มีไฟล์เปรียบเทียบ จะแสดงแค่ผล OCR
         return processed_ocr_text, None, None, None
-
-
-# theme = gr.themes.Monochrome(
-#     primary_hue="sky",
-#     secondary_hue="blue",
-#     neutral_hue="stone",
-#     radius_size="md",
-# ).set(
-#     background_fill_primary='*primary_50',
-#     background_fill_primary_dark='*secondary_950',
-#     background_fill_secondary='*secondary_300',
-#     background_fill_secondary_dark='*neutral_700',
-#     border_color_accent='*primary_900',
-#     button_primary_background_fill='*secondary_600',
-#     button_primary_background_fill_hover='*secondary_700',
-#     button_primary_background_fill_hover_dark='*primary_600',
-#     button_primary_border_color_hover_dark='*secondary_600',
-#     button_primary_text_color_hover_dark='*secondary_100'
-# )
 
 theme = gr.themes.Monochrome(
     primary_hue="yellow",
@@ -125,15 +123,13 @@ def run_gradio():
         ],
         outputs=[
             gr.Textbox(label="OCR Result"),
-            gr.Number(label="Accuracy (if evaluated)"),
-            gr.Number(label="Precision (if evaluated)"),
-            gr.Number(label="Recall (if evaluated)")# ,
-            # gr.Number(label="edit distance (if evaluated)")
+            gr.HTML(label="Accuracy (if evaluated)"),
+            gr.HTML(label="Precision (if evaluated)"),
+            gr.HTML(label="Recall (if evaluated)")
         ],
         title="OCR with Optional Evaluation",
         description="Upload an image for OCR. Optionally, upload a .txt file for evaluation."
     )
-    
     # เริ่มการทำงานของ Gradio
     interface.launch()
 
