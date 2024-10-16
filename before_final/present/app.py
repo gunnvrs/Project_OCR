@@ -16,22 +16,37 @@ def evaluate_alignment(matches, ref, ocr):
     errors = []
     correct_details = []
 
+    TP = 0  # True Positive
+    FP = 0  # False Positive
+    FN = 0  # False Negative
+
     ref_chars = list(ref)
     ocr_chars = list(ocr)
 
     for tag, i1, i2, j1, j2 in matches:
         if tag == 'equal':
             correct_chars += (i2 - i1)
+            TP += (i2 - i1)  # จำนวนอักษรที่ตรงกัน (True Positive)
             for i in range(i1, i2):
                 correct_details.append((i, ref_chars[i]))
-        else:
+        elif tag == 'replace':
             incorrect_chars += max(i2 - i1, j2 - j1)
+            FP += (j2 - j1)  # ตัวอักษรที่ OCR อ่านผิด (False Positive)
+            FN += (i2 - i1)  # ตัวอักษรที่หายไปจาก OCR (False Negative)
             for i in range(i1, i2):
                 expected_char = ref_chars[i]
                 got_char = ocr_chars[j1 + (i - i1)] if j1 + (i - i1) < len(ocr_chars) else 'None'
                 errors.append((i, expected_char, got_char))
+        elif tag == 'delete':
+            incorrect_chars += (i2 - i1)
+            FN += (i2 - i1)  # ตัวอักษรที่ควรมีแต่ไม่มีใน OCR (False Negative)
+        elif tag == 'insert':
+            incorrect_chars += (j2 - j1)
+            FP += (j2 - j1)  # ตัวอักษรที่เพิ่มขึ้นมาใน OCR (False Positive)
 
-    return correct_chars, incorrect_chars, errors, correct_details
+    total_chars = len(ref_chars)
+
+    return TP, FP, FN, correct_chars, incorrect_chars, errors, correct_details
 
 # ฟังก์ชันสำหรับการคำนวณค่าสีจากค่าของเปอร์เซ็นต์
 def get_color_from_value(value):
@@ -65,12 +80,15 @@ def ocr_process(image, reference_text_file=None):
 
             # เรียกใช้ฟังก์ชันประเมินผลลัพธ์
             matches = get_best_alignment(reference_text_cleaned, processed_ocr_text_cleaned)
-            correct_chars, incorrect_chars, errors, correct_details = evaluate_alignment(matches, reference_text_cleaned, processed_ocr_text_cleaned)
+            TP, FP, FN, correct_chars, incorrect_chars, errors, correct_details = evaluate_alignment(matches, reference_text_cleaned, processed_ocr_text_cleaned)
 
             total_chars = len(reference_text_cleaned)
-            precision = (correct_chars / (correct_chars + incorrect_chars)) * 100 if (correct_chars + incorrect_chars) > 0 else 0
-            recall = (correct_chars / total_chars) * 100 if total_chars > 0 else 0
-            accuracy = correct_chars / total_chars * 100 if total_chars > 0 else 0
+            # precision = (correct_chars / (correct_chars + incorrect_chars)) * 100 if (correct_chars + incorrect_chars) > 0 else 0
+            # recall = (correct_chars / total_chars) * 100 if total_chars > 0 else 0
+            # accuracy = correct_chars / total_chars * 100 if total_chars > 0 else 0
+            precision = (TP / (TP + FP)) * 100 if (TP + FP) > 0 else 0
+            recall = (TP / (TP + FN)) * 100 if (TP + FN) > 0 else 0
+            accuracy = (TP / total_chars) * 100 if total_chars > 0 else 0
 
             # สร้างแถบสี HTML สำหรับ Accuracy, Precision, Recall โดยใช้สีจากค่าและเพิ่ม radius
             accuracy_bar = f"""
@@ -108,9 +126,6 @@ theme = gr.themes.Monochrome(
     background_fill_secondary_dark='*neutral_950',
     background_fill_secondary='*neutral_200',
 )
-
-#  # # คำนวณ Edit Distance
-# edit_distance = sum([max(i2 - i1, j2 - j1) for tag, i1, i2, j1, j2 in matches if tag != 'equal'])
 
 # ฟังก์ชันสำหรับรัน Gradio UI
 def run_gradio():
